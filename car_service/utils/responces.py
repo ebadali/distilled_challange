@@ -18,20 +18,15 @@ def getResponce(status, message, sessionvalue):
     return jsonify(response)
 
 
-def getFailResponse(reason=None):
+def getFailResponse(reason=None,error=404):
     response = {'status': 'failure', 'error': reason}
-    return jsonify(response), 404
+    return jsonify(response), error
 
 
-def getSuccessResponse(data=None, sessionvalue=None, userdata=None, msg=None,favs=None):
+def getSuccessResponse(data=None,message_code=200):
     response = {
         'status': 'success',
         'data': data,
-        'sessionkey': sessionvalue,
-        'users': userdata,
-        'message': msg}
-
-    if favs:
-        response['favs'] = favs
+    }
         
-    return jsonify(response), 200
+    return jsonify(response), message_code

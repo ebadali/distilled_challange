@@ -3,7 +3,7 @@ import markdown
 import os
 
 # Import the framework
-from flask import Flask, g
+from flask import Flask, g, request
 from flask_restful import Resource, reqparse
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_sqlalchemy import SQLAlchemy
@@ -18,8 +18,6 @@ db = SQLAlchemy(app)
 # Circular reference
 from car_service.utils import responces
 from car_service.datastore import dbhandler
-
-dbhandler.intialize_db(db)
 
 
 # Swagger stuffs
@@ -82,13 +80,19 @@ def get_a_car(identifier):
 
     return responces.getFailResponse(reason="Not Found")
 
+# @autherize_check
+# /car/aggregator/price?include=make,model,year
+@app.route("/car/aggregator/price",methods=['GET'])
+def get_avg_price():
+    """Gets the average price by make, model or year. Or combinition of both"""
+    
+    # Parsing the query string
+    included_query = request.args.get('include','')
+    if included_query:
+        pass
 
-
-@app.route("/summary/price/<string:id>",methods=['GET'])
-def get_avg_price(id):
-    """get specific car without chases number"""
-
-    return {'message': 'Success', 'data': 'running'}, 200
+    avg_price = dbhandler.get_avg_price(db)
+    return responces.getSuccessResponse(data=avg_price)
 
 
 @app.errorhandler(Exception)
@@ -113,7 +117,7 @@ if __name__ == '__main__':
     ARGS = PARSER.parse_args()
 
     PORT = int(os.environ.get('PORT', 5000))
-    dbhandler.reset_database()
+    dbhandler.intialize_db(db)
     if ARGS.debug:
         print("Running in debug mode")
         CORS = CORS(app)
