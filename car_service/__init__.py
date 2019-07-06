@@ -1,6 +1,5 @@
-#!/usr/local/bin/python3
-import markdown
 import os
+import markdown
 
 # Import the framework
 from flask import Flask, g, request
@@ -8,9 +7,13 @@ from flask_restful import Resource, reqparse
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_sqlalchemy import SQLAlchemy
 
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 # Create an instance of Flask
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test3.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test3.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////' + os.path.join(basedir, 'people.db')
+
 # Use built in SQLAlchemy's built-in event system instead of
 # Flask's SQLAlchemy event system
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -19,11 +22,12 @@ db = SQLAlchemy(app)
 from car_service.utils import responces
 from car_service.datastore import dbhandler
 
+dbhandler.intialize_db(db)
 
 # Swagger stuffs
 ### swagger specific ###
 SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.json'
+API_URL = '/static/swagger.yaml'
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
@@ -87,11 +91,13 @@ def get_avg_price():
     """Gets the average price by make, model or year. Or combinition of both"""
     
     # Parsing the query string
-    included_query = request.args.get('include','')
-    if included_query:
-        pass
+    make = request.args.get('make',None)
+    model = request.args.get('model',None)
+    year = request.args.get('year',None)
 
-    avg_price = dbhandler.get_avg_price(db)
+
+
+    avg_price = dbhandler.get_avg_price(db,make_filter=make,model_filter=model,year_filter=year)
     return responces.getSuccessResponse(data=avg_price)
 
 
@@ -102,6 +108,15 @@ def unhandled_exception(e):
     
     app.logger.error('Unhandled Exception: %s', (e))
     return responces.getFailResponse(msg)
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return responces.getFailResponse(reason='Not found',error=404)
+
+@app.errorhandler(500)
+def internal_error(error):
+    return responces.getFailResponse(reason='Internal error',error=500)
 
 
 # TODO: Logger settings.

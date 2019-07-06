@@ -1,0 +1,190 @@
+openapi: 3.0.0
+
+info:
+  description: Ebad
+  version: 1.0.0
+  title: Python-Flask API
+  contact:
+    email: ebad@staypal.io
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
+servers:
+  - url: /
+    description: Development server
+tags:
+  - name: Car service API
+    description: Example APIs for requesting the resources of car requests
+paths:
+
+  '/cars':
+    get:
+      tags:
+        - Car service API
+      summary: Returns all cars
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArrayOfCars'
+
+        # Definition of all error statuses
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  '/car/{identifier}':
+    get:
+      tags:
+          - Car service API
+      summary: Get a car by identifier
+      parameters:
+        - in: path
+          name: identifier
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: The car id
+          
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/car'
+
+        # Definition of all error statuses
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  '/car/aggregator/price':
+    get:
+      tags:
+        - Car service API
+      summary: Get average price of the cars
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/avgResponse'
+
+        # Definition of all error statuses
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+
+  responses:
+    
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Schema for error response body
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: string
+      required:
+        - status
+        - data
+    
+    ArrayOfCars:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              identifier:
+                type: integer
+              make:
+                type: string
+              model:
+                type: string
+              price:
+                type: string
+              year:
+                type: string
+              last_updated:
+                type: string
+  
+      required:
+        - status
+        - data
+    
+    
+    car:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: object
+          properties:
+            identifier:
+              type: integer
+            make:
+              type: string
+            model:
+              type: string
+            price:
+              type: string
+            year:
+              type: string
+            last_updated:
+              type: string
+              
+    avgResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: number
+      
+      required:
+        - status
+        - data
+    
+    
+
+security:
+  - bearerAuth: []

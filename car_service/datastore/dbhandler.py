@@ -44,62 +44,41 @@ def add_car(userObjec: Car):
 def get_all_cars():
 
     all_cars = [ car.serialize for car in Car.query.all() ]
-    # print (all_cars)
+
     return all_cars
 
 
 def get_specific_cars(identifier):
 
     car = Car.query.filter(Car.identifier == identifier).one()
-    print (car)
+    
     return car.serialize if car else None
 
 
-"""Gets the average price by make, model or year. Or combinition of both"""
 def get_avg_price(db,make_filter=None,model_filter=None,year_filter=None):
+    """Gets the average price by make, model or year. Or combinition of both"""
+    # TODO: unscalable logic. Change that to catter more filters 
 
-    # Finalized. !
-    # data =  db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.year=='2004',Car.make=='Nissan').scalar()
-
-    # works
-    # data =  db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).having(Car.year=='2002').scalar()
-
-
-
-    # Filter first and sum last
 
 
     if make_filter and model_filter and year_filter:
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.model,Car.year).filter(Car.make == make_filter, Car.model==model_filter,Car.year==year_filter).scalar()
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.make == make_filter, Car.model==model_filter,Car.year==year_filter).scalar()
     elif make_filter and model_filter:
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.make == make_filter, Car.year==model_filter).scalar()
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.make == make_filter, Car.year==model_filter).scalar()
     elif model_filter and year_filter: 
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.model == model_filter,Car.year==year_filter).scalar()
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.model == model_filter,Car.year==year_filter).scalar()
     elif year_filter and make_filter : 
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.make == make_filter,Car.year==year_filter).scalar()
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.make == make_filter,Car.year==year_filter).scalar()
     elif make_filter:
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.make == make_filter).scalar()
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.make == make_filter).scalar()
     elif model_filter:
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.model == model_filter).scalar()        
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.model == model_filter).scalar()        
     elif year_filter:
-        data = db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).filter(Car.year == year_filter).scalar()        
+        data = db.session.query(db.func.avg(Car.price)).filter(Car.year == year_filter).scalar()        
     else:
         data = db.session.query(db.func.avg(Car.price)).scalar()
 
-    # groupby_tuple = Car.make,Car.year
-    
-
-    # data =  db.session.query(db.func.avg(Car.price)).filter(Car.year=='2002').group_by(Car.make,Car.model,Car.year).scalar()
-
-    # using sub query
-    # sub_query = db.session.query(Car.price, db.func.avg('*').\
-    #     label('car_price')).\
-    #     group_by(Car.make,Car.model,Car.year).subquery()
-
-    # sub_query
-
-    # data =  db.session.query(db.func.avg(Car.price)).group_by(Car.make,Car.year).having(Car.year=='2002').scalar()
-
+  
     print (data,type(data))
     return data
 
