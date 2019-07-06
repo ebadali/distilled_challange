@@ -2,6 +2,8 @@ import os,sys
 import markdown
 from functools import wraps
 
+import logging
+from logging.handlers import RotatingFileHandler
 # Import the framework
 from flask import Flask, g, request, abort
 from flask_restful import Resource, reqparse
@@ -11,8 +13,6 @@ from flask_sqlalchemy import SQLAlchemy
 from config import app_config
 from car_service.utils import responces
 
-
-API_SECRET_TOKEN = "Some_Predefined_Token"
 
 # Create an instance of Flask
 # app = Flask(__name__)
@@ -59,7 +59,11 @@ def create_app(config_name):
     app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
     db.init_app(app)
 
-
+    
+    handler = RotatingFileHandler(app.config['LOG_FILE'], maxBytes=100000, backupCount=3)
+    logger = logging.getLogger('tdm')
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(handler)
 
 
     # enforcing the api check
@@ -90,6 +94,10 @@ def create_app(config_name):
         if app.config['DEBUG'] == False:
             dbhandler.intialize_db(db,app)
 
+    @app.before_request
+    def log_request_info():
+        logger.info('Headers: %s', request.headers)
+        logger.debug('Body: %s', request.get_data())
         
 
     @app.route("/")
@@ -177,21 +185,3 @@ def create_app(config_name):
 
 # TODO: Logger settings.
 
-
-# if __name__ == '__main__':
-
-#     PARSER = argparse.ArgumentParser(
-#         description="Seans-Python-Flask-REST-Boilerplate")
-
-#     PARSER.add_argument('--debug', action='store_true',
-#                         help="Use flask debug/dev mode with file change reloading")
-#     ARGS = PARSER.parse_args()
-
-#     PORT = int(os.environ.get('PORT', 5000))
-#     dbhandler.intialize_db(db)
-#     if ARGS.debug:
-#         print("Running in debug mode")
-#         CORS = CORS(app)
-#         app.run(host='0.0.0.0', port=PORT, debug=True)
-#     else:
-#         app.run(host='0.0.0.0', port=PORT, debug=False)
