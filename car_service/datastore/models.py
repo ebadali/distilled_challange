@@ -43,7 +43,6 @@ class Car(Base):
             'model'         : self.model,
             'year'         : self.year,
             'chassis_no'         : self.chassis_no,
-            'identifier'         : self.identifier,
             # TODO: Handle the datetime. Lets keep it string for now
             'last_updated': self.last_updated,
             'price'         : self.price

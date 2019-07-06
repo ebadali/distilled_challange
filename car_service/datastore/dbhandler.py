@@ -9,15 +9,15 @@ from sqlalchemy import func
 # from datastore.models import Car
 
 
-def intialize_db(db):
+def intialize_db(db,app):
     print ("reset db")
-    db.drop_all()
-    db.create_all()
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
 
-    res = Car.query.first()
-
-    if not res:
-        load_db(db)
+        res = Car.query.first()
+        if not res:
+            load_db(db)
 
 
 def load_db(db):
@@ -35,8 +35,6 @@ def load_db(db):
 
         db.session.commit()
 
-def add_car(userObjec: Car):
-    pass
 
 
 # reset_database()
@@ -50,9 +48,17 @@ def get_all_cars():
 
 def get_specific_cars(identifier):
 
-    car = Car.query.filter(Car.identifier == identifier).one()
+    car_result = None
+    try:
+        car_result = Car.query.filter(Car.identifier == identifier).one().serialize()
+        
+    except Exception as e:
+        # Should return one and only one
+        # This clause will deal with the
+        # many on none results 
+        pass
     
-    return car.serialize if car else None
+    return car_result
 
 
 def get_avg_price(db,make_filter=None,model_filter=None,year_filter=None):
