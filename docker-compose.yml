@@ -1,9 +1,17 @@
 version: '3.4'
 
 services:
-  device-registry:
+  car-service:
     build: .
     volumes:
       - .:/usr/src/app
     ports:
       - 5000:80
+  sqlite3:
+      image: nouchka/sqlite3:latest
+      stdin_open: true
+      tty: true
+      volumes:
+        - ./db/:/root/db/
+      ports:
+      - 12346:12346

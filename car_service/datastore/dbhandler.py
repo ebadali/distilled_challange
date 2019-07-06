@@ -50,22 +50,19 @@ def get_specific_cars(identifier):
 
     car_result = None
     try:
-        car_result = Car.query.filter(Car.identifier == identifier).one().serialize()
-        
-    except Exception as e:
-        # Should return one and only one
-        # This clause will deal with the
-        # many on none results 
+        car_result = Car.query.filter(Car.identifier == identifier).first()
+    except Exception as e:        
         pass
+        
     
-    return car_result
+    return car_result.serialize if car_result else None
 
 
 def get_avg_price(db,make_filter=None,model_filter=None,year_filter=None):
     """Gets the average price by make, model or year. Or combinition of both"""
     # TODO: unscalable logic. Change that to catter more filters 
 
-
+    data = None
 
     if make_filter and model_filter and year_filter:
         data = db.session.query(db.func.avg(Car.price)).filter(Car.make == make_filter, Car.model==model_filter,Car.year==year_filter).scalar()
@@ -85,6 +82,5 @@ def get_avg_price(db,make_filter=None,model_filter=None,year_filter=None):
         data = db.session.query(db.func.avg(Car.price)).scalar()
 
   
-    print (data,type(data))
     return data
 

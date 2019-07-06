@@ -3,7 +3,7 @@ import markdown
 from functools import wraps
 
 # Import the framework
-from flask import Flask, g, request
+from flask import Flask, g, request, abort
 from flask_restful import Resource, reqparse
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_sqlalchemy import SQLAlchemy
@@ -12,6 +12,7 @@ from config import app_config
 from car_service.utils import responces
 
 
+API_SECRET_TOKEN = "Some_Predefined_Token"
 
 # Create an instance of Flask
 # app = Flask(__name__)
@@ -58,18 +59,22 @@ def create_app(config_name):
     app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
     db.init_app(app)
 
-    dbhandler.intialize_db(db,app)
+
+
 
     # enforcing the api check
     def require_api_key(api_method):
         @wraps(api_method)
 
+        # enables a very basic api auth against a hardcoded secret key
         def check_api_key(*args, **kwargs):
-            apikey = request.headers.get('ApiKey')
-            if apikey and apikey == SECRET_KEY:
+            apikey = request.headers.get('Authorization')
+
+            if apikey and len(apikey.split(" ")) == 2 and apikey.split(" ")[1] == app.config['API_ACCESS_TOKEN']:
                 return api_method(*args, **kwargs)
             else:
                 abort(401)
+                return None
 
         return check_api_key
 
@@ -78,6 +83,14 @@ def create_app(config_name):
         db = getattr(g, '_database', None)
         if db is not None:
             db.close()
+
+    @app.before_first_request
+    def create_tables():
+        # db.create_all()
+        if app.config['DEBUG'] == False:
+            dbhandler.intialize_db(db,app)
+
+        
 
     @app.route("/")
     def index():
@@ -99,17 +112,18 @@ def create_app(config_name):
         
         return responces.getSuccessResponse()
 
-    # @require_api_key
     @app.route("/cars", methods=['GET'])
+    @require_api_key
     def get_all_cars():
         """get all cars"""
         # TOD: Add pagination or limit response to certain limit!
         all_cars = dbhandler.get_all_cars()
-        print('my car size '+ str(len(all_cars)))
+
         return responces.getSuccessResponse(data=all_cars)
 
 
     @app.route("/car/<string:identifier>",methods=['GET'])
+    @require_api_key
     def get_a_car(identifier):
         """get specific car without chases number"""
 
@@ -119,9 +133,8 @@ def create_app(config_name):
 
         return responces.getFailResponse(reason="Not Found")
 
-    # @autherize_check
-    # /car/aggregator/price?include=make,model,year
     @app.route("/car/aggregator/price",methods=['GET'])
+    @require_api_key
     def get_avg_price():
         """Gets the average price by make, model or year. Or combinition of both"""
         
@@ -142,11 +155,14 @@ def create_app(config_name):
     def unhandled_exception(e):
 
         msg = "Erorr: {} ".format(e)
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
-        app.logger.error('Unhandled Exception: %s', (e))
+        print(msg)
+        # print(exc_type, fname, exc_tb.tb_lineno)
+        # app.logger.error('Unhandled Exception: %s', (e))
         return responces.getFailResponse(msg)
+
+    @app.errorhandler(401)
+    def not_found_error(error):
+        return responces.getFailResponse(reason='Unauthorized access',error=401)
 
 
     @app.errorhandler(404)

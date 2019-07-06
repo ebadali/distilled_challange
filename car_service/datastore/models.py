@@ -25,7 +25,7 @@ class Car(Base):
     price = db.Column(db.String(120), unique=False)
 
     # New instance instantiation procedure
-    def __init__(self, make, model, year,chassis_no,identifier,last_updated,price):
+    def __init__(self, make, model, year, chassis_no, identifier, last_updated, price):
 
         self.make     = make
         self.model    = model
@@ -38,16 +38,18 @@ class Car(Base):
     @property
     def serialize(self):
         """Return object data in easily serializable format"""
+        # TODO: Handle the datetime. Lets keep it string for now
         return {
             'make'         : self.make,
             'model'         : self.model,
             'year'         : self.year,
-            'chassis_no'         : self.chassis_no,
-            # TODO: Handle the datetime. Lets keep it string for now
+            'identifier'   : self.identifier,
             'last_updated': self.last_updated,
             'price'         : self.price
-   
         }
+    
+    def as_dict(self):
+       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self):
         return '<identifier %r>' % self.identifier
