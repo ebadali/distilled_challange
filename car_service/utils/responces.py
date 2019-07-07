@@ -1,21 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-''' Responder suit: Generate Response for apis'''
+''' Responder suit: Single point of controll for the API Responses'''
 
 from flask import jsonify
-
-
-def getResponce(status, message, sessionvalue):
-    response = {}
-    if status == "error":
-        response = {'status': 'error', 'error': message}
-    else:
-        response = {
-            'status': 'success',
-            'sessionkey': sessionvalue,
-            'message': message}
-    return jsonify(response)
 
 
 def getFailResponse(reason=None,error=404):

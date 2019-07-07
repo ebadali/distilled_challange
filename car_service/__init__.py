@@ -14,19 +14,6 @@ from config import app_config
 from car_service.utils import responces
 
 
-# Create an instance of Flask
-# app = Flask(__name__)
-# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test3.db'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////' + os.path.join(basedir, 'people.db')
-
-# # Use built in SQLAlchemy's built-in event system instead of
-# # Flask's SQLAlchemy event system
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
-
-
-# Circular reference
-
 # Swagger stuffs
 ### swagger specific ###
 SWAGGER_URL = '/swagger'
@@ -35,7 +22,7 @@ SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
     config={
-        'app_name': "Seans-Python-Flask-REST-Boilerplate"
+        'app_name': "Car-Service API"
     }
 )
 
@@ -50,9 +37,7 @@ def create_app(config_name):
     from car_service.datastore import dbhandler
     from car_service.datastore.models import Car
 
-    # app = FlaskAPI(__name__, instance_relative_config=True)
-    # overriding Werkzeugs built-in password hashing utilities using Bcrypt.
-    # bcrypt = Bcrypt(app)
+
     app = Flask(__name__)
     app.config.from_object(app_config[config_name])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -92,7 +77,7 @@ def create_app(config_name):
     def create_tables():
         # db.create_all()
         if app.config['DEBUG'] == False:
-            dbhandler.intialize_db(db,app)
+            dbhandler.intialize_db(app)
 
     @app.before_request
     def log_request_info():
@@ -133,7 +118,7 @@ def create_app(config_name):
     @app.route("/car/<string:identifier>",methods=['GET'])
     @require_api_key
     def get_a_car(identifier):
-        """get specific car without chases number"""
+        """get specific car with id as identifier"""
 
         single_car = dbhandler.get_specific_cars(identifier)
         if single_car:
@@ -144,7 +129,7 @@ def create_app(config_name):
     @app.route("/car/aggregator/price",methods=['GET'])
     @require_api_key
     def get_avg_price():
-        """Gets the average price by make, model or year. Or combinition of both"""
+        """Gets the average price by make, model or year. Or combinition of all"""
         
         # Parsing the query string
         make = request.args.get('make',None)
@@ -153,7 +138,7 @@ def create_app(config_name):
 
 
 
-        avg_price = dbhandler.get_avg_price(db,make_filter=make,model_filter=model,year_filter=year)
+        avg_price = dbhandler.get_avg_price(make_filter=make,model_filter=model,year_filter=year)
         if not avg_price:
             responces.getFailResponse(reason='empty database')
         return responces.getSuccessResponse(data=avg_price)
@@ -163,7 +148,6 @@ def create_app(config_name):
     def unhandled_exception(e):
 
         msg = "Erorr: {} ".format(e)
-        print(msg)
         # print(exc_type, fname, exc_tb.tb_lineno)
         # app.logger.error('Unhandled Exception: %s', (e))
         return responces.getFailResponse(msg)

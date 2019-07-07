@@ -2,6 +2,7 @@
 # from datastore import db
 from car_service import db
 
+############## Partial DDL ############## 
 # Define a base model for other database tables to inherit
 class Base(db.Model):
 
@@ -16,6 +17,7 @@ class Base(db.Model):
 class Car(Base):
     __tablename__ = 'table_car'
 
+    # TODO: Need to handle date time.
     make = db.Column(db.String(80), unique=False, nullable=False)
     model = db.Column(db.String(120), unique=False, nullable=False)
     year = db.Column(db.String(80), unique=False, nullable=False)
@@ -48,8 +50,6 @@ class Car(Base):
             'price'         : self.price
         }
     
-    def as_dict(self):
-       return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self):
         return '<identifier %r>' % self.identifier

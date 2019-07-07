@@ -1,27 +1,25 @@
 import csv
 import shelve
 from flask import Flask, g
-from car_service.datastore.models import Car
+from car_service.datastore.models import Car, db
 from sqlalchemy import func
-
-# from datastore import Car
-# import Car
-# from datastore.models import Car
+from sqlalchemy.orm import load_only
 
 
-def intialize_db(db,app):
-    print ("reset db")
+############## Partial DDL ############## 
+def intialize_db(app):
+    ''' Initialized db, and load data from csv file if db is empty'''
     with app.app_context():
         db.drop_all()
         db.create_all()
 
         res = Car.query.first()
         if not res:
-            load_db(db)
+            load_db()
 
 
-def load_db(db):
-
+def load_db():
+    '''load data from csv file into the database'''    
     csv.register_dialect('myDialect',delimiter = ',',quoting=csv.QUOTE_ALL,skipinitialspace=True)
 
     with open('car_data.csv', 'r') as f:
@@ -36,21 +34,27 @@ def load_db(db):
         db.session.commit()
 
 
-
-# reset_database()
+############## DML ############## 
+fields = ['make','model','year','identifier','last_updated', 'price']
 
 def get_all_cars():
+    """Gets all cars from the db. Returns empty array if db is empty"""
 
-    all_cars = [ car.serialize for car in Car.query.all() ]
+    # all_cars = [ car.serialize 
+    #     for car in Car.query.all() ]
+    all_cars = [ car.serialize for car in db.session.query(Car).options(load_only(*fields)).all() ]
+
 
     return all_cars
 
 
 def get_specific_cars(identifier):
+    """lookup and returns the specific car with identifier from the db. Returns None if not found"""
 
     car_result = None
     try:
-        car_result = Car.query.filter(Car.identifier == identifier).first()
+        car_result = db.session.query(Car).options(load_only(*fields)).filter(Car.identifier == identifier).first()
+        # car_result = Car.query.filter(Car.identifier == identifier).first()
     except Exception as e:        
         pass
         
@@ -58,8 +62,8 @@ def get_specific_cars(identifier):
     return car_result.serialize if car_result else None
 
 
-def get_avg_price(db,make_filter=None,model_filter=None,year_filter=None):
-    """Gets the average price by make, model or year. Or combinition of both"""
+def get_avg_price(make_filter=None,model_filter=None,year_filter=None):
+    """Gets the average price by make, model or year. Or combinition of both. Returns the float value, None otherwise"""
     # TODO: unscalable logic. Change that to catter more filters 
 
     data = None

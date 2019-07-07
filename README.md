@@ -1,23 +1,91 @@
-# Device Registry Service
+# Car Service API
 
-## Usage
+## Table of contents
+* [General info](#general-info)
+* [Architecture](#architecture)
+* [Installation](#installation)
+* [API](#api)
+* [Tests](#tests)
 
-All responses will have the form
+## General info
+
+This project is a solution to Distilled SCH coding challange. The challange required the system to expose RESTFull apis, and serve those apis while interfacing with the database (sqlite) with the appropriate implementation of testing, stability, security and maintainability of the system. The challange requires the implementation to
+
+1. be in Python 3.x
+2. exposes Endpoint to retrieve a record by id without chassis number.
+3. exposes Endpoint to return the average price by  make  or  model  or  year, or their combinations
+5. includes DDL and DML to create the database and table and load from csv above.
+
+with extra functionalities such as:
+
+1. implementation of swagger endpoint to describe and document the API.
+2. Dockerization of the system
+3. Dockerization of the web service and database using docker compose.
+
+
+## Architecture
+
+This project address all those functionalities mentioned in the previous section. 
+On a highest level, The system is implemented inside the docker container while utilizing the WSGI (gunicorn), python micro-framework (flask), object relational mapper like SQLAlchemy and along with realted utilities as shown in the architecture.png
+
+
+![Architecture](architecture.jpg)
+
+
+
+## Installation
+
+To run this project, docker and docker compose installation is required. Which can be found at https://docs.docker.com/install/.
+Further installation is done within the docker and required no manual installation:
+
+
+### Clone
+
+- Clone this repo to your local machine using 
+
+`git clone https://github.com/ebadali/distilled_challange.git`
+
+### Setup
+
+
+- Build and run docker files using docker compose
+
+```shell
+$ docker compose -up --build
+```
+
+
+
+## APIs
+
+RESTFull apis are implemented using the Flask micro-framework to enable other applications to utilize the car-service resources on HTTP protocol in a stateless fashion.  
+
+
+All API responses will have the form
 
 ```json
 {
     "data": "Mixed type holding the content of the response",
-    "message": "Description of what happened"
+    "status": "Description of what happened as in 'success' or 'failure'"
 }
 ```
 
 Subsequent response definitions will only detail the expected value of the `data field`
 
-### List all devices
+### Authentication
+
+Access to the API is granted by providing an Access token in the HTTP Authroziation header. This authentation is simulated by hardcoding a key phrase ```Some_Predefined_Token``` in the authorization header along with bearer in the form of :
+
+```curl -H "Authorization: Bearer Some_Predefined_Token" https://some.resource
+```
+
+
+
+### List all Cars
 
 **Definition**
 
-`GET /devices`
+`GET /cars`
 
 **Response**
 
@@ -26,51 +94,65 @@ Subsequent response definitions will only detail the expected value of the `data
 ```json
 [
     {
-        "identifier": "floor-lamp",
-        "name": "Floor Lamp",
-        "device_type": "switch",
-        "controller_gateway": "192.1.68.0.2"
-    },
-    {
-        "identifier": "samsung-tv",
-        "name": "Living Room TV",
-        "device_type": "tv",
-        "controller_gateway": "192.168.0.9"
+      "identifier": 1,
+      "last_updated": "2017-02-01 00:00:00",
+      "make": "Nissan",
+      "model": "Micra",
+      "price": "500.0",
+      "year": "2004"
     }
 ]
 ```
 
-### Registering a new device
+**Example**
 
-**Definition**
+```
+curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
+```
 
-`POST /devices`
+### Lookup car details
+
+`GET /car/<identifier>`
 
 **Arguments**
 
-- `"identifier":string` a globally unique identifier for this device
-- `"name":string` a friendly name for this device
-- `"device_type":string` the type of the device as understood by the client
-- `"controller_gateway":string` the IP address of the device's controller
-
-If a device with the given identifier already exists, the existing device will be overwritten.
+- `"identifier":string` an identifier for this car. Not neccesasrily unique
 
 **Response**
 
-- `201 Created` on success
+- `404 Not Found` if the car does not exist
+- `200 OK` on success
 
 ```json
 {
-    "identifier": "floor-lamp",
-    "name": "Floor Lamp",
-    "device_type": "switch",
-    "controller_gateway": "192.1.68.0.2"
+    "data" : {
+      "identifier": 1,
+      "last_updated": "2017-02-01 00:00:00",
+      "make": "Nissan",
+      "model": "Micra",
+      "price": "500.0",
+      "year": "2004"
+    }
 }
 ```
+**Example**
 
-## Lookup device details
+```
+curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
+```
 
-`GET /device/<identifier>`
+### Calculate average price by make and/or model and/or year
+
+`GET /car/aggregator/price`
+
+`GET /car/aggregator/price?make=<make>&model=<model>&year=<year>`
+
+**Querystring Arguments (optional)**
+
+- `"make":string` make of the car such as : Nissan
+- `"model":string` model such as : Micra
+- `"year":string` model year of the car such as : 2002
+
 
 **Response**
 
@@ -79,23 +161,20 @@ If a device with the given identifier already exists, the existing device will b
 
 ```json
 {
-    "identifier": "floor-lamp",
-    "name": "Floor Lamp",
-    "device_type": "switch",
-    "controller_gateway": "192.1.68.0.2"
+    "data" : 234.53
 }
 ```
 
-## Delete a device
+**Example**
 
-**Definition**
-
-`DELETE /devices/<identifier>`
-
-**Response**
-
-- `404 Not Found` if the device does not exist
-- `204 No Content` on success
+```
+curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
+```
 
 
-<!-- py.test tests -->
+## Tests
+Testing of the endpoints are performed using python's unittest module. The idea is to test all the endpoints with all the use-cases. In this tests directory, however, not all the use-cases are captured and required further implementation of integration and unit tests. All the tests are located in the ```tests``` directory. In order to run all the tests, in the root directory of the project run 
+
+```
+nosetests --verbose
+```

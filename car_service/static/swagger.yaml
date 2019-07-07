@@ -72,6 +72,23 @@ paths:
         - Car service API
       summary: Get average price of the cars
 
+      parameters:
+        - in: query
+          name: make
+          schema:
+            type: string
+          description: make of the car such as Nissan
+        - in: query
+          name: model
+          schema:
+            type: string
+          description: model of the cars such as Micra
+        - in: query
+          name: year
+          schema:
+            type: string
+          description: model year of the cars such as 2002
+
       responses:
         '200':
           description: OK
