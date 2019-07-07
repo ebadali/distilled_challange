@@ -6,6 +6,7 @@
 * [Installation](#installation)
 * [API](#api)
 * [Tests](#tests)
+* [Checklist](#checklist)
 
 ## General info
 
@@ -31,7 +32,7 @@ On a highest level, The system is implemented inside the docker container while 
 
 ![Architecture](architecture.jpg)
 
-
+Certain considerations are carried out in the implementation of the ORM and db queries. All the db queries were made from a separate file, called dbhandler.py, to retrieve and send the data to and from database. This potentially raise some circular referencing issues in the code but reinforce the modularity and clarity of the codebase.   
 
 ## Installation
 
@@ -74,9 +75,10 @@ Subsequent response definitions will only detail the expected value of the `data
 
 ### Authentication
 
-Access to the API is granted by providing an Access token in the HTTP Authroziation header. This authentation is simulated by hardcoding a key phrase ```Some_Predefined_Token``` in the authorization header along with bearer in the form of :
+Access to the API is granted by providing an Access token in the HTTP Authroziation header. This authentation is simulated by hardcoding a key phrase ```Some_Predefined_Token``` in the authorization header along with bearer in the form of 
 
-```curl -H "Authorization: Bearer Some_Predefined_Token" https://some.resource
+```
+curl -H "Authorization: Bearer Some_Predefined_Token" https://some.resource
 ```
 
 
@@ -138,7 +140,7 @@ curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
 **Example**
 
 ```
-curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
+curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/car/2
 ```
 
 ### Calculate average price by make and/or model and/or year
@@ -168,7 +170,7 @@ curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
 **Example**
 
 ```
-curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/cars
+curl -H "Authorization: Bearer Some_Predefined_Tokena" http://0.0.0.0:5000/car/aggregator/price?make=Nissan&model=Micra&year=2002
 ```
 
 
@@ -178,3 +180,19 @@ Testing of the endpoints are performed using python's unittest module. The idea 
 ```
 nosetests --verbose
 ```
+
+
+## Checklist
+
+
+**Required**
+
+- [x] Python 3.x usage
+- [x] Endpoint to retrieve a record by id excluding the ‘chassis_no` 
+- [x] OEndpoint to return the average price by  make  or  model  or  year,   or a combination of the
+
+**Extras**
+
+- [x] implementation of swagger endpoint at : http://0.0.0.0:5000/swagger
+- [x] Dockerization of the system
+- [ ] Dockerization of the web service and database using docker compose: This however is implemented in a separate docker compose file called 'docker-compose-postgress.yaml' which, instead of sqlite, dockerize the postgress and python app in a separate containers and uses docker compose to run it.
